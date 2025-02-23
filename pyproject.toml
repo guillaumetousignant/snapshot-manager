@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "snapshot-manager"
+version = "1.0.0"
+authors = [
+    {name="Guillaume Tousignant", email="moi_guillaume@hotmail.com"},
+]
+description = "Makes periodic snapshots of app storage and mounts them for backup"
+readme = "README.md"
+requires-python = ">= 3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "requests"
+]
+
+[project.urls]
+Homepage = "https://github.com/guillaumetousignant/snapshot-manager"
+Issues = "https://github.com/guillaumetousignant/snapshot-manager/issues"
+
+[project.optional-dependencies]
+dev = ["ruff", "pyright"]
+test = ["pytest"]
+
+[project.scripts]
+snapshot-manager = "snapshot_manager.snapshot_manager:main"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W6", "B", "I"]
+unfixable = ["B"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
