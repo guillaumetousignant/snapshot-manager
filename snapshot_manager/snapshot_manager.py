@@ -140,7 +140,9 @@ def archive_snapshots(app: App, retention: int):
 
 
 def stop_containers(app: App):
-    logging.debug(f"Stopping {app.name} container(s)")
+    logging.debug(
+        f'Stopping {app.name} container(s): "{", ".join(app.containers[::-1])}"'
+    )
     result = subprocess.run(
         ["docker", "stop"] + app.containers[::-1],
         capture_output=True,
@@ -161,7 +163,7 @@ def snapshot_mounts(app: App):
 
 
 def start_containers(app: App):
-    logging.debug(f"Starting {app.name} container(s)")
+    logging.debug(f'Starting {app.name} container(s): "{", ".join(app.containers)}"')
     result = subprocess.run(
         ["docker", "start"] + app.containers,
         capture_output=True,
@@ -267,7 +269,9 @@ def do_mount(app: App):
 
 
 def stop_backup_containers(backup_containers: list[str]):
-    logging.info("Stopping backup container(s)")
+    logging.info(
+        f'Stopping backup container(s): "{", ".join(backup_containers[::-1])}"'
+    )
     result = subprocess.run(
         ["docker", "stop"] + backup_containers[::-1],
         capture_output=True,
@@ -279,7 +283,7 @@ def stop_backup_containers(backup_containers: list[str]):
 
 
 def start_backup_containers(backup_containers: list[str]):
-    logging.info("Starting backup container(s)")
+    logging.info(f'Starting backup container(s): "{", ".join(backup_containers)}"')
     result = subprocess.run(
         ["docker", "start"] + backup_containers,
         capture_output=True,
