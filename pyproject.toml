@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "snapshot-manager"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
-    {name="Guillaume Tousignant", email="moi_guillaume@hotmail.com"},
+    { name = "Guillaume Tousignant", email = "moi_guillaume@hotmail.com" },
 ]
 description = "Makes periodic snapshots of app storage and mounts them for backup"
 readme = "README.md"
@@ -17,9 +17,7 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = [
-    "requests"
-]
+dependencies = ["requests"]
 
 [project.urls]
 Homepage = "https://github.com/guillaumetousignant/snapshot-manager"
