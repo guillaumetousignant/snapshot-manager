@@ -139,18 +139,16 @@ def archive_snapshots(app: App, retention: int):
         rename_mount_latest_snapshot(mount, app.name)
 
 
-def stop_containers(app: App):
-    logging.debug(
-        f'Stopping {app.name} container(s): "{", ".join(app.containers[::-1])}"'
-    )
+def stop_containers(name: str, containers: list[str]):
+    logging.debug(f'Stopping {name} container(s): "{", ".join(containers[::-1])}"')
     result = subprocess.run(
-        ["docker", "stop"] + app.containers[::-1],
+        ["docker", "stop"] + containers[::-1],
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
-        logging.critical(f"Failed to stop {app.name} container(s)")
-        raise RuntimeError(f"Failed to stop {app.name} container(s)")
+        logging.critical(f"Failed to stop {name} container(s)")
+        raise RuntimeError(f"Failed to stop {name} container(s)")
 
 
 def snapshot_mounts(app: App):
@@ -162,16 +160,16 @@ def snapshot_mounts(app: App):
             raise RuntimeError(f"Failed to create {app.name} {mount.origin} snapshot")
 
 
-def start_containers(app: App):
-    logging.debug(f'Starting {app.name} container(s): "{", ".join(app.containers)}"')
+def start_containers(name: str, containers: list[str]):
+    logging.debug(f'Starting {name} container(s): "{", ".join(containers)}"')
     result = subprocess.run(
-        ["docker", "start"] + app.containers,
+        ["docker", "start"] + containers,
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
-        logging.critical(f"Failed to start {app.name} container(s)")
-        raise RuntimeError(f"Failed to start {app.name} container(s)")
+        logging.critical(f"Failed to start {name} container(s)")
+        raise RuntimeError(f"Failed to start {name} container(s)")
 
 
 def do_snapshot(app: App, retention: int):
@@ -180,12 +178,12 @@ def do_snapshot(app: App, retention: int):
     archive_snapshots(app, retention)
 
     if app.containers:
-        stop_containers(app)
+        stop_containers(app.name, app.containers)
 
     snapshot_mounts(app)
 
     if app.containers:
-        start_containers(app)
+        start_containers(app.name, app.containers)
 
 
 def unmount_mount(mount: Mount, app_name: str):
@@ -268,32 +266,6 @@ def do_mount(app: App):
         mount_mount(mount, app.name)
 
 
-def stop_backup_containers(backup_containers: list[str]):
-    logging.info(
-        f'Stopping backup container(s): "{", ".join(backup_containers[::-1])}"'
-    )
-    result = subprocess.run(
-        ["docker", "stop"] + backup_containers[::-1],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        logging.critical("Failed to stop backup container(s)")
-        raise RuntimeError("Failed to stop backup container(s)")
-
-
-def start_backup_containers(backup_containers: list[str]):
-    logging.info(f'Starting backup container(s): "{", ".join(backup_containers)}"')
-    result = subprocess.run(
-        ["docker", "start"] + backup_containers,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        logging.critical("Failed to start backup container(s)")
-        raise RuntimeError("Failed to start backup container(s)")
-
-
 def send_notification(monitor_url: str, status: str, message: str):
     logging.debug(
         f'Sending notification with status "{status}" and message "{message}"'
@@ -336,13 +308,13 @@ def snapshot_manager(
         do_snapshot(app, retention)
 
     if backup_containers:
-        stop_backup_containers(backup_containers)
+        stop_containers("backup", backup_containers)
 
     for app in apps:
         do_mount(app)
 
     if backup_containers:
-        start_backup_containers(backup_containers)
+        start_containers("backup", backup_containers)
 
     for app in apps:
         remove_last_snapshot(app, retention)
