@@ -36,19 +36,16 @@ class App:
 
 class Configuration:
     retention: int = 0
-    backup_containers: list[str] = []
     monitor_url: Optional[str] = ""
     apps: list[App] = []
 
     def __init__(
         self,
         retention: int,
-        backup_containers: list[str],
         monitor_url: Optional[str],
         apps: list[App],
     ):
         self.retention = retention
-        self.backup_containers = backup_containers
         self.monitor_url = monitor_url
         self.apps = apps
 
@@ -296,7 +293,6 @@ def send_notification(monitor_url: str, status: str, message: str):
 
 def snapshot_manager(
     retention: int,
-    backup_containers: list[str],
     monitor_url: Optional[str],
     apps: list[App],
 ):
@@ -307,14 +303,8 @@ def snapshot_manager(
     for app in apps:
         do_snapshot(app, retention)
 
-    if backup_containers:
-        stop_containers("backup", backup_containers)
-
     for app in apps:
         do_mount(app)
-
-    if backup_containers:
-        start_containers("backup", backup_containers)
 
     for app in apps:
         remove_last_snapshot(app, retention)
@@ -330,7 +320,6 @@ DEFAULT_RETENTION = 14
 def read_config(
     config_path: Path,
     input_retention: Optional[int] = None,
-    input_backup_containers: Optional[list[str]] = None,
     input_monitor_url: Optional[str] = None,
 ) -> Configuration:
     logging.info(f'Reading configuration file "{config_path}"')
@@ -351,16 +340,6 @@ def read_config(
         else DEFAULT_RETENTION
     )
     logging.debug(f"Using retention: {retention}")
-
-    config_backup_containers = configuration["config"].get("backup-containers")
-    backup_containers = (
-        input_backup_containers
-        if input_backup_containers is not None
-        else config_backup_containers
-        if config_backup_containers is not None
-        else []
-    )
-    logging.debug(f'Using backup containers: "{", ".join(backup_containers)}"')
 
     monitor_url = (
         input_monitor_url
@@ -388,15 +367,13 @@ def read_config(
 
     logging.debug(f'Using apps: "{", ".join([app.name for app in apps])}"')
 
-    return Configuration(retention, backup_containers, monitor_url, apps)
+    return Configuration(retention, monitor_url, apps)
 
 
 def snapshot_manager_main(args: argparse.Namespace):
     config = read_config(args.config)
 
-    snapshot_manager(
-        config.retention, config.backup_containers, config.monitor_url, config.apps
-    )
+    snapshot_manager(config.retention, config.monitor_url, config.apps)
 
 
 def get_version() -> str:
@@ -431,13 +408,6 @@ def main():
         "--retention",
         type=int,
         help="Number of snapshots to retain",
-    )
-    parser.add_argument(
-        "-b",
-        "--backup-containers",
-        type=str,
-        nargs="*",
-        help="Backup containers to stop before updating mounts and start after",
     )
     parser.add_argument(
         "-m",

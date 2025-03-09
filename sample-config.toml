@@ -1,6 +1,5 @@
 [config]
 retention = 14
-backup-containers = ["borgmatic"]
 monitor-url = "https://uptime-kuma.example.com/api/push/ABCDEFGHIJ"
 
 [[apps]]
@@ -25,3 +24,21 @@ children = ["config", "data"]
 origin = "POOL/apps/another_example_app_db"
 destination = "/mnt/snapshots/another_example_app_db"
 children = ["data"]
+
+[[apps]]
+name = "An app with no containers to stop"
+containers = []
+
+[[apps.mounts]]
+origin = "POOL/apps/container_that_should_not_shutdown"
+destination = "/mnt/snapshots/container_that_should_not_shutdown"
+children = ["config"]
+
+[[apps]]
+name = "An app with a top level mount only"
+containers = ["top_level_mount_app"]
+
+[[apps.mounts]]
+origin = "POOL/apps/top_level_mount_app"
+destination = "/mnt/snapshots/top_level_mount_app"
+children = []
